@@ -1,0 +1,34 @@
+# 1  SPY is one of the original index ETFs tracking the S&P 500 group of stocks. Use Python to grab the SPY historical data from Janurary 1st in 2000 to Janurary 1st in 2021.
+# Code 1:
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+spy = pd.read_csv('SPY2000_2021.csv', index_col='Date', parse_dates=True)
+start_date = '2000-01-01'
+end_date = '2021-01-01'
+spy2 = spy[(spy.index >= start_date) & (spy.index <= end_date)]
+
+# 2  Plot the Adjusted Closing price of the SP500, with the price on the y axis and the year on the x axis. 
+# Use Locator() and Formatter() techniques to configure the plot x axis so that you can see a tick for every year in the dataset (only showing the year number, not the full YYYY-MM-DD that is the default). 
+# Choose a reasonable figure size, set the dpi to 300 and save this plot in your working directory as sp500.png
+from matplotlib import dates
+plt.figure(figsize=(10,4), dpi=300)
+ax = spy2['Adj Close'].plot()
+ax.xaxis.set_Locator(dates.YearLocator())
+ax.xaxis.set_Fortmatter(dates.DateFormatter('%Y'))
+plt.savefig("sp500.png")
+
+
+# 3 Create a histogram of the daily volume of shares of SPY traded. Choose a reasonable bin size.
+plt.figure(figsize=(10,4), dpi=100)
+ax= spy2['Volume'].plot(kind='hist', bins=50, ylim=(0,700))
+plt.grid(linestyle='-', color='grey', which ='both')
+
+
+# 4 Let's explore the crash and recovery of 2020 due to the COVID pandemic. Create a line plot of the Adj. Close price from 1-1-2020 to 1-1-2021. The xaxis ticks should be formatted by YYYY-MM.
+plt.figure(figsize=(10,4), dpi=100)
+ax=spy2['Adj Close'].plot(xlim=['2020-01-01','2021-01-01'])
+ax.xaxis.set_major_locator(dates.MonthLocator())
+ax.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m')
+
+# 5  Create a plot whichs shows the adjusted closing price of SPY for the entire length of the time series along with an added trend line of the corresponding 200 days rolling mean of the adj. close price. Make sure to add a legend that identifies each line.
