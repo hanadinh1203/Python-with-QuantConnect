@@ -1,73 +1,37 @@
-class CrawlingYellowGreenShark(QCAlgorithm):
- def Initialize(self): self.SetStartDate(2022, 8, 18) self.SetCash(100000) self.AddEquity("SPY", Resolution.Minute) self.AddEquity("BND", Resolution.Minute) self.AddEquity("AAPL", Resolution.Minute)
- def OnData(self, data: Slice): if not self.Portfolio.Invested: self.SetHoldings("SPY", 0.33) self.SetHoldings("BND", 0.33) self.SetHoldings("AAPL", 0.33)
-
-class SellAfterTime(QCAlgorithm): def Initialize(self): self.SetCash(10000) self.SetStartDate(2015,1,1) self.SetEndDate(2021,1,1) self.apple = self.AddEquity("SPY", Resolution.Daily) self.invest = True def OnData(self,data): if not self.Portfolio.Invested and self.invest: self.SetHoldings("SPY",1) self.invested_time = self.Time # Datetime self.Log(self.Time - self.invested_time) time_diff = (self.Time - self.invested_time).days
- if time_diff > 1000: self.Liquidate('SPY') self.invest = False
-
-class SellOnProfit(QCAlgorithm): def Initialize(self): self.SetStartDate(2018,1,1) self.SetEndDate(2021,1,1) self.SetCash(10000) self.AddEquity("AAL", Resolution.Daily) self.invest = True
- #50% profit --> sell self.limit_profit_percent = -0.5 def OnData(self, data): if not self.Portfolio.Invested and self.invest: self.SetHoldings("AAL",1)
- profit_percent = self.Portfolio['AAL'].UnrealizedProfitPercent if profit_percent < self.limit_profit_percent: self.Liquidate('AAL') self.invest = False
-# region importsfrom AlgorithmImports import *from QuantConnect.Securities import *# endregion
-class LockInProfit(QCAlgorithm): def Initialize(self): self.SetStartDate(2019,1,1) self.SetCash(100000) self.ba = self.AddEquity("BA",Resolution.Daily) self.invest=True self.sell_ticket = None def OnData(self, data): if not self.Portfolio.Invested and self.invest: # First Day Close Price self.MarketOrder(self.ba.Symbol,10) self.invest = False if self.sell_ticket == None: # Stop price trigger = 60% of Initial Open Price self.sell_ticket = self.StopMarketOrder(self.ba.Symbol,-10,self.Securities['BA'].Open*0.6,'Sell BA') 
-# region importsfrom AlgorithmImports import *from QuantConnect.Securities import *# endregion
-class HyperActiveVioletKangaroo(QCAlgorithm):
- def Initialize(self): self.SetStartDate(2015, 1, 1) self.SetEndDate(2020,1,1) self.SetCash(100000) self.AddEquity("AAPL", Resolution.Minute) self.invest_toggle = True self.sell_toggle = True
- def OnData(self, data): if not data[self.apple.Symbol]: return if not self.Portfolio.Invested and self.invest_toggle: shares_to_buy = int(self.Portfolio.Cash/data[self.apple.Symbol].Open) self.MarketOrder(self.apple.Symbol,shares_to_buy) self.invest_toggle = False return profit = self.Portfolio[self.apple.Symbol].UnrealizedProfitPercent if profit >=0.1 and self.sell_toggle: held_shares = self.Portfolio[self.apple.Symbol].Quantity self.MarketOrder(self.apple.Symbol,-(held_shares//2))
-# region importsfrom AlgorithmImports import *from QuantConnect.Securities import *# endregion
-class CasualGreenJackal(QCAlgorithm):
- def Initialize(self): self.SetStartDate(2020, 1, 1) self.SetEndDate(2021,1,1) self.SetCash(100000) self.xom = self.AddEquity("XOM", Resolution.Minute) self.bp = self.AddEquity("BP", Resolution.Minute) self.invest_toggle = True self.order_toggle = True 
- def OnData(self, data: Slice): if not self.Portfolio.Invested and self.invest_toggle: self.SetHoldings(self.xom.Symbol, 0.5) self.SetHoldings(self.bp.Symbol, 0.5) self.invest_toggle = False if not self.Portfolio.Invested and self.order_toggle: xom_shares = self.Portfolio[self.xom.Symbol].Quantity xom_buy_price = self.Portfolio[self.xom.Symbol].Price bp_shares = self.Portfolio[self.bp.Symbol].Quantity bp_buy_price = self.Portfolio[self.bp.Symbol].Price self.StopMarketOrder(self.xom.Symbol, -xom_shares, xom_buy_price *0.8) self.StopMarketOrder(self.bp.Symbol, -bp_shares, bp_buy_price *0.8) self.invest_toggle = False 
-# region importsfrom AlgorithmImports import *from QuantConnect.Securities import *# endregion
-class FocusedYellowGreenDuck(QCAlgorithm):
-    def Initialize(self):        self.SetStartDate(2007, 1, 1)        self.SetEndDate(2010, 1, 1)        self.SetCash(100000)        self.citi = self.AddEquity("C", Resolution.Daily)        self.citi.SetDataNormalizationMode(DataNormalizationMode.Raw)        self.c = self.citi.Symbol        self.first_day_close = None        self.sellTicket = None        self.invest = True        self.lost_limit = 0.5
-    def OnData(self, data: Slice):        if not self.Portfolio.Invested and self.invest:            self.initial_order = self.MarketOrder(self.c,10)            self.first_day_close = self.Securities['C'].Close            self.invest = False        if self.sellTicket is None:            self.sellTicket = self.StopMarketOrder(self.c, -10,            self.Securities['C'].Close*self.lost_limit, "Stop Loss")    def OnEndOfDay(self):        if self.sellTicket is None:            return        else:            self.Log(str(self.Securities['C'].Close))        response = None        # 5% drop from open --> close        # Update the stop Price --> 50% stop loss --> 75% stop Loss        if ((self.Securities['C'].Open - self.Securities['C'].Close)/self.Securities['C'].Open) >0.05:            updateSettings = UpdateOrderFields()            updateSettings.StopPrice = self.first_day_close * 0.75            response = self.sellTicket.Update(updateSettings)        if response is not None and hasattr(response, IsSuccess) and response.IsSuccess:            self.Debug("Order was successful")    def OnOrderEvent(self, orderEvent):        if orderEvent.FillQuantity == 0:            return        fetched = self.Transactions.GetOrderById(orderEvent.OrderId)        self.Log(f"{str(fetched.Type)} filled, for {str(orderEvent.FillQuantity)}")# region importsfrom AlgorithmImports import *from QuantConnect.Securities import *# endregion
-class FocusedYellowGreenDuck(QCAlgorithm):
-    def Initialize(self):        self.SetStartDate(2019, 1, 1)        self.SetEndDate(2021,1,1)        self.tesla = self.AddEquity("TSLA", Resolution.Daily)
-        self.Schedule.On(self.DateRules.MonthStart(),self.TimeRules.At(9,30),self.Buy)        self.monthly_buy = 200        self.cash_reserve = 200
-                self.SetCash(10000)        def Buy(self):    # TSLA stock one a month    # Cash vs. TSLA price open        if self.Portfolio.Cash < self.tesla.Open:            self.Debug("Not enough cash")            return    # cash_reserve + $200 DCA        elif self.tesla.Open >self.cash_reserve:            self.cash_reserve +=self.monthly_buy            self.Log("Stock too expensive")            return        shares_to_buy = int(self.cash_reserve/self.tesla.Open)        self.Log(f"Buying shares: {shares_to_buy}")        self.MarketOrder(self.tesla.Symbol, shares_to_buy)        self.cash_reserve = self.monthly_buy
-    # LIMIT $200 a month        # Purchase    pass
-# region importsfrom AlgorithmImports import *from QuantConnect.Securities import *# endregion
-class FocusedYellowGreenDuck(QCAlgorithm):
-    def Initialize(self):        self.SetStartDate(2018, 1, 1)        self.SetEndDate(2019,1,1)        self.spy = self.AddEquity("SPY", Resolution.Daily)        self.invest = True        self.SetCash(100000)        self.highest_price_seen = None        self.sell_ticket = None                def OnData(self, data):        if not self.Portfolio.Invested and self.invest:            self.MarketOrder("SPY", 1)            self.invest = False            if self.Portfolio.Invested and self.sell_ticket == None:            self.sell_ticket = self.StopMarketOrder("SPY",-1,0.9*self.Securities['SPY'].Close)            self.highest_price_seen = self.Securities['SPY'].Close        if self.sell_ticket != None:            if self.Securities['SPY'].Close > self.highest_price_seen:                self.highest_price_seen = self.Securities['SPY'].Close
-                updateFields = UpdateOrderFields()                updateFields.StopPrice = self.highest_price_seen *0.9                response = self.sell_ticket.Update(updateFields)                if response.IsSuccess:                    self.Debug(f"Stop price was updated to {self.highest_price_seen*0.9}")
-    def OnOrderEvent(self, orderEvent):        if orderEvent.Status != OrderStatus.Filled:            return        if self.sell_ticket != None and self.sell_ticket.OrderId == orderEvent.OrderId:            self.Log("Executed")
-# region imports
-from AlgorithmImports import *
-from QuantConnect.Securities import *
-# endregion
-
+# 1 Set 100% of my portfolio holdings to Exxon Mobil Corporation (XOM) and hold for the entire period (from Jan 1st, 2020 to Jan 1st, 2021). Starting cash $10,000
 class FocusedYellowGreenDuck(QCAlgorithm):
     def Initialize(self):
-        self.SetStartDate(2018,1,1)
-        self.SetEndDate(2020,1,1)
-        self.SetCash(100000)
-        self.vnq = self.AddEquity("VNQ", Resolution.Daily)
-        self.vnqi = self.AddEquity("VNQI", Resolution.Daily)
+        self.SetStartDate(2020,1,1)
+        self.SetEndDate(2021,1,1)
+        self.SetCash(10000)
+        self.AddEquity("XOM", Resolution.Daily)
+        
+        
 
     def OnData(self, data):
-        vnq_gain = (self.vnq.Close - self.vnq.Open)/self.vnq.Open
-        vnqi_gain = (self.vnqi.Close - self.vnqi.Open)/self.vnqi.Open
-        if vnq_gain > 0.02 and vnq_gain > vnqi_gain:
-            self.SetHoldings("VNQI", 1, True)
-            self.Log(f"VNQI gain: {vnqi_gain}")
-        if vnqi_gain > 0.02 and vnqi_gain > vnq_gain:
-            self.SetHoldings("VNQ",1, True)
-            self.Log(f"VNQ Gain : {vnq_gain}")
-        else:
-            self.Log("Nothing")
-            return
+        if not self.Portfolio.invested:
+           self.SetHoldings('XOM', 1)
 
-# region importsfrom AlgorithmImports import *# endregion
-class MuscularBlueRhinoceros(QCAlgorithm):
- def Initialize(self): self.SetStartDate(2020, 1, 1) self.SetCash(100000) self.AddEquity("SPY", Resolution.Daily) price_plot = Chart("Custom Chart") price_plot.AddSeries(Series('Price',SeriesType.Line,0)) self.AddChart(price_plot)
- def OnData(self, data: Slice): if not self.Portfolio.Invested: self.SetHoldings("SPY", 1) self.Plot("Custom Chart","Price", self.Securities["SPY"].Open)
-# region importsfrom AlgorithmImports import *# endregion
-class MuscularBlueRhinoceros(QCAlgorithm):
- def Initialize(self): self.SetStartDate(2017, 1, 1) self.SetCash(100000) self.AddEquity("SPY", Resolution.Daily) price_plot = Chart("Candle Stick") price_plot.AddSeries(Series('Price',SeriesType.Candle,0)) self.AddChart(price_plot)
- def OnData(self, data: Slice): if not self.Portfolio.Invested: self.SetHoldings("SPY", 1) self.Plot("Candle Stick","Price", self.Securities["SPY"].Price) # region importsfrom AlgorithmImports import *# endregion
-class CalmApricotAnguilline(QCAlgorithm):
-    def Initialize(self):        self.SetStartDate(2021, 1, 1)        self.SetEndDate(2021, 2, 1)        self.SetCash(100000)        self.AddEquity("SPY", Resolution.Daily)        self.UniverseSettings.Resolution = Resolution.Daily        self.AddUniverse(self.CoarseSelection)    def CoarseSelection(self, coarse):        sorted_by_price = sorted(coarse, key=lambda x:x.Price, reverse = True)        self.list_of_symbols = [x.Symbol for x in sorted_by_price][:3]        return self.list_of_symbols    def OnData(self, data: Slice):        self.Log(self.Time)        for sec in self.Securities.Values:            if not data.ContainsKey(sec.Symbol) or not data[sec.Symbol]:                return            self.Log(f"{data[sec.Symbol.Symbol} open at: {data[sec.Symbol].Open}")        self.Log("------------------")# region importsfrom AlgorithmImports import *# endregion
-class CalmApricotAnguilline(QCAlgorithm):
-    def Initialize(self):        self.SetStartDate(2021, 1, 1)        self.SetEndDate(2021, 2, 1)        self.SetCash(10000000)        self.AddEquity("SPY", Resolution.Daily)        self.UniverseSettings.Resolution = Resolution.Daily        self.AddUniverse(self.CoarseSelection)    def CoarseSelection(self, coarse):        sorted_by_price = sorted(coarse, key=lambda x:x.Price, reverse = True)        self.list_of_symbols = [x.Symbol for x in sorted_by_price][:3]        return self.list_of_symbols    def OnData(self, data: Slice):        self.Log(self.Time)        for sec in self.Securities.Values:            if not data.ContainsKey(sec.Symbol) or not data[sec.Symbol]:                return            self.Log(f"{data[sec.Symbol].Symbol} open at: {data[sec.Symbol].Open}")        self.Log("------------------")    def OnSecuritiesChanged(self,changes):        self.Log("CHANGE IN OUR UNIVERSE")        for sec in changes.RemovedSecurities:            self.Liquidate(sec.Symbol)            self.Log(f"SOLD: {sec}")
-        for sec in changes.AddedSecurities:            self.SetHoldings(sec.Symbol,0.1)            self.Log(f"BOUGHT: {sec}")
+# 2 Set 50% of my portfolio holdings to Coca Cola(KO) and leave the rest as cash at the start of the period (from Jan 1st, 2020 to Jan 1st, 2021). 
+# After 100 days, liquidate my entire portfolio to cash. No more repurchase of KO, after 100 days should be 100% for the rest of the time period. Starting cash $10,000
+class LRP(QCAlgorithm):
+    def Initialize(self):
+         self.SetStartDate(2020,1,1)
+         self.SetEndDate(2021,1,1)
+         self.SetCash(10000)
+         self.AddEquity("KO", Resolution.Daily)
+         self.invest = True
+    def OnData(self, data):
+         if not self.Portfolio.invest and self.invest:
+             self.SetHoldings("KO", 0.5)
+             self.i_time = self.Time
+
+         self.Log(self.Time - self.i_time)
+         day = (self.Time - self.i_time).days
+         if day > 100:
+            self.Liquidate("KO")
+            self.invest = False
+
+# 3 
+            
+
