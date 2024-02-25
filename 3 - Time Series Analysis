@@ -32,3 +32,8 @@ ax.xaxis.set_major_locator(dates.MonthLocator())
 ax.xaxis.set_major_formatter(dates.DateFormatter('%Y-%m')
 
 # 5  Create a plot whichs shows the adjusted closing price of SPY for the entire length of the time series along with an added trend line of the corresponding 200 days rolling mean of the adj. close price. Make sure to add a legend that identifies each line.
+plt.figure(figsize=(12,5), dpi=100)
+spy2['Adj Close'].plot(label='Adj Close')
+spy2['Adj Close'].rolling(200).mean().plot(label='252 MA of Adj Close')
+plt.legend()
+
